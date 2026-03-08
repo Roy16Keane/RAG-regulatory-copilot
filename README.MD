@@ -13,6 +13,28 @@ The application is containerised with Docker and deployed on AWS EKS using Kuber
 
 ## Architecture
 
+<p align="center">
+  <img src="rag_copilot/docs/archi.png" width="800">
+</p>
+
+
+### infrastructure 
+
+```
+AWS ECR
+ ├── rag-api image
+ └── rag-ui image
+
+AWS EKS Cluster
+ ├── rag-api Deployment
+ ├── rag-ui Deployment
+ ├── Qdrant
+ └── OpenSearch
+
+Kubernetes Services
+ ├── ClusterIP services (internal communication)
+ └── LoadBalancer service for UI
+```
 
 ## Features
 
@@ -54,12 +76,9 @@ Infrastructure
 
 
 
-## Cloud Deployment
+## Running locally 
 
-
-
-
-## Deployment Steps
+## Cloud Deployment Steps
 
 ### Build the API and Streamlit UI images 
 ```
