@@ -77,8 +77,8 @@ Infrastructure
 
 
 ## Running locally
-- clone the respirotory 
-- Run to build containers
+- Clone the respirotory 
+- From root repo run to build containers
 ```
 docker compose up -d --build
 ```
