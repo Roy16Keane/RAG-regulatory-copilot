@@ -6,7 +6,9 @@ The application is containerised with Docker and deployed on AWS EKS using Kuber
 
 ## Streamlit UI Demo
 
-![RAG UI](rag_copilot/docs/ui_demo1.png)
+<p align="center">
+  <img src="rag_copilot/docs/ui_demo.png" width="800">
+</p>
 
 ## Architecture
 
