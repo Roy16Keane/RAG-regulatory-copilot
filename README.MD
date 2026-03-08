@@ -132,7 +132,6 @@ kubectl get svc -n rag
 ```
 Open loadbalancer URL
 
-## Project Structure
 
 ## Future Improvements
 
