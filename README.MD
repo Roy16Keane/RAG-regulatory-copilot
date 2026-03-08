@@ -76,7 +76,29 @@ Infrastructure
 
 
 
-## Running locally 
+## Running locally
+- clone the respirotory 
+- Run to build containers
+```
+docker compose up -d --build
+```
+- once stack is up access
+- API
+```
+http://localhost:8000/docs
+```
+- UI
+```
+http://localhost:8501
+```
+- Opensearch
+```
+http://localhost:9200
+```
+- Qdrant
+```
+http://localhost:6333/dashboard
+```
 
 ## Cloud Deployment Steps
 
