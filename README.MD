@@ -4,6 +4,12 @@ An end-to-end Retrieval-Augmented Generation (RAG) system that allows users to q
 
 The application is containerised with Docker and deployed on AWS EKS using Kubernetes, with images stored in Amazon ECR.
 
+## Streamlit UI Demo
+
+<p align="center">
+  <img src="docs/ui_demo1.png" width="800">
+</p>
+
 
 ## Architecture
 
