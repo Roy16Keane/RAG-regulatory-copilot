@@ -140,3 +140,6 @@ Open loadbalancer URL
 - Add monitoring with Prometheus + Grafana
 - Implement authentication layer
 - Improve hybrid search ranking
+
+## License
+This project is licensed under the MIT License.
