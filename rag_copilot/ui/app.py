@@ -56,6 +56,20 @@ def chat(question, doc_id, alpha, top_k):
     r = requests.post(f"{API_URL}/chat", json=payload, timeout=300)
     r.raise_for_status()
     return r.json()
+def retrieval_debug(query, doc_id, alpha, top_k_vec=8, top_k_bm25=8, top_k_hybrid=8, use_rewrite=True):
+    payload = {
+        "query": query,
+        "doc_id": doc_id,
+        "top_k_vec": top_k_vec,
+        "top_k_bm25": top_k_bm25,
+        "top_k_hybrid": top_k_hybrid,
+        "alpha": alpha,
+        "use_rewrite": use_rewrite,
+    }
+
+    r = requests.post(f"{API_URL}/retrieve/debug", json=payload, timeout=300)
+    r.raise_for_status()
+    return r.json()
 
 
 # Ready check
@@ -234,6 +248,125 @@ with left:
         )
 
         st.session_state.last_citations = data.get("citations", [])
+st.divider()
+
+with st.expander("🔎 Debug retrieval", expanded=False):
+
+    st.caption(
+        "Inspect what the retriever is doing before the final answer is generated."
+    )
+
+    debug_query = st.text_input(
+        "Debug query",
+        placeholder="Enter a question to inspect retrieval...",
+        disabled=not is_ready(),
+    )
+
+    col_a, col_b, col_c = st.columns(3)
+
+    top_k_vec = col_a.slider("Vector top-k", 1, 20, 8, 1)
+    top_k_bm25 = col_b.slider("BM25 top-k", 1, 20, 8, 1)
+    top_k_hybrid = col_c.slider("Hybrid top-k", 1, 20, 8, 1)
+
+    use_rewrite = st.checkbox("Use query rewriting", value=True)
+
+    run_debug = st.button(
+        "Run retrieval debug",
+        disabled=not is_ready() or not debug_query.strip(),
+        use_container_width=True,
+    )
+
+    if run_debug:
+
+        with st.spinner("Running retrieval debug..."):
+
+            debug_data = retrieval_debug(
+                query=debug_query,
+                doc_id=st.session_state.doc_id,
+                alpha=alpha,
+                top_k_vec=top_k_vec,
+                top_k_bm25=top_k_bm25,
+                top_k_hybrid=top_k_hybrid,
+                use_rewrite=use_rewrite,
+            )
+
+        st.success("Retrieval debug completed ✅")
+
+        st.subheader("Rewritten query")
+
+        rewritten = debug_data.get("rewritten", {})
+
+        col1, col2 = st.columns(2)
+
+        with col1:
+            st.markdown("**Semantic query**")
+            st.code(rewritten.get("sem", ""), language="text")
+
+        with col2:
+            st.markdown("**Keyword query**")
+            st.code(rewritten.get("kw", ""), language="text")
+
+        def render_chunks(title, chunks):
+            st.subheader(title)
+
+            if not chunks:
+                st.info("No chunks returned.")
+                return
+
+            for i, chunk in enumerate(chunks, start=1):
+                score = chunk.get("score", chunk.get("hybrid_score", "N/A"))
+                page = chunk.get("page", "N/A")
+                chunk_id = chunk.get("chunk_id", "N/A")
+                filename = chunk.get("filename", "Unknown file")
+
+                expander_title = (
+                    f"#{i} | score: {score} | page: {page} | chunk: {chunk_id}"
+                )
+
+                with st.expander(expander_title, expanded=i <= 2):
+                    st.markdown(f"**File:** {filename}")
+                    st.markdown(f"**Page:** {page}")
+                    st.markdown(f"**Chunk ID:** `{chunk_id}`")
+
+                    if "vector_score" in chunk or "bm25_score" in chunk:
+                        st.markdown(
+                            f"""
+                            **Vector score:** `{chunk.get("vector_score", "N/A")}`  
+                            **BM25 score:** `{chunk.get("bm25_score", "N/A")}`  
+                            **Hybrid score:** `{chunk.get("hybrid_score", "N/A")}`
+                            """
+                        )
+
+                    text = (
+                        chunk.get("text")
+                        or chunk.get("snippet")
+                        or chunk.get("content")
+                        or ""
+                    )
+
+                    st.write(text)
+
+        tab1, tab2, tab3 = st.tabs(
+            ["Vector results", "BM25 results", "Hybrid results"]
+        )
+
+        with tab1:
+            render_chunks(
+                "Top vector chunks",
+                debug_data.get("vector_results", []),
+            )
+
+        with tab2:
+            render_chunks(
+                "Top BM25 chunks",
+                debug_data.get("bm25_results", []),
+            )
+
+        with tab3:
+            render_chunks(
+                "Top hybrid chunks",
+                debug_data.get("hybrid_results", []),
+            )
 
 
 # Citation column
