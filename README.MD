@@ -1,4 +1,4 @@
-# Regulatory Compliance RAG Copilot (LLM + Kubernetes + AWS)
+# Regulatory Compliance RAG Copilot  with Document Intelligence (LLM + Kubernetes + AWS)
 
 An end-to-end Retrieval-Augmented Generation (RAG) system that allows users to query financial regulatory documents using natural language. The system combines semantic search with large language models to generate contextual answers.
 
@@ -15,6 +15,40 @@ The application is containerised with Docker and deployed on AWS EKS using Kuber
 
 <p align="center">
   <img src="rag_copilot/docs/archi.png" width="800">
+</p>
+
+## Document Intelligence Upgrade
+
+The system has been extended beyond traditional RAG into a document intelligence pipeline.
+
+Instead of performing retrieval purely on raw text chunks, uploaded regulatory documents are processed through layout-aware extraction, metadata generation, and entity-aware chunking before hybrid retrieval.
+
+This enables:
+
+- Explainable retrieval with supporting evidence
+- Structured document metadata
+- Entity-aware search and reasoning
+- Improved grounding and citation transparency
+- Visibility into retrieved chunks and confidence
+
+## Document Intelligence Workflow
+
+<p align="center">
+  <img src="rag_copilot/docs/documentflow.png" width="900">
+</p>
+
+## Explainable Evidence UI
+The upgraded interface exposes the retrieval process to users by displaying supporting citations, extracted entities, and retrieved chunks used during answer generation.
+<p align="center">
+  <img src="rag_copilot/docs/citationand answ.png" width="900">
+</p>
+
+<p align="center">
+  <img src="rag_copilot/docs/entities.png" width="900">
+</p>
+
+<p align="center">
+  <img src="rag_copilot/docs/retrievedchunk.png" width="900">
 </p>
 
 
@@ -38,16 +72,28 @@ Kubernetes Services
 
 ## Features
 
+### Document Intelligence
+- Layout-aware PDF processing
+- Metadata and section extraction
+- Entity extraction from regulatory documents
+- Evidence visibility and provenance tracking
+
+### Retrieval and Reasoning
 - Retrieval-Augmented Generation (RAG)
-- Hybrid search (vector + keyword retrieval)
-- Semantic embeddings with OpenAI
+- Hybrid search (semantic + keyword retrieval)
+- OpenAI-powered grounded responses
+- Citation-enforced prompting
+- Supporting chunk inspection
+
+### System and Infrastructure
 - FastAPI inference service
 - Streamlit user interface
 - Qdrant vector database
 - OpenSearch keyword index
 - Docker containerisation
 - Kubernetes deployment on AWS EKS
-- Public LoadBalancer service for UI access
+- Amazon ECR image registry
+- Public LoadBalancer access
 
 ## Tech Stack
 
