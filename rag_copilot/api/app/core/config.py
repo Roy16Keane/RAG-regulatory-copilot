@@ -8,9 +8,14 @@ class Settings(BaseModel):
     RAW_DIR: Path = Path("data/raw")
     CHUNKS_DIR: Path = Path("data/chunks")
     DOCS_DIR: Path = Path("data/docs")
+    
 
     TARGET_CHARS: int = 1400
     OVERLAP_CHARS: int = 150
+
+     #directories for entity extraction
+    EXTRACTED_DIR: Path = DATA_DIR / "extracted"
+    ENTITIES_DIR: Path = DATA_DIR / "extracted" / "entities"
 
     # OpenAI
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY", "")

@@ -19,6 +19,11 @@ if "messages" not in st.session_state:
     st.session_state.messages = []
 if "last_citations" not in st.session_state:
     st.session_state.last_citations = []
+if "last_supporting_chunks" not in st.session_state:
+    st.session_state.last_supporting_chunks = []
+
+if "last_extracted_entities" not in st.session_state:
+    st.session_state.last_extracted_entities = {}
 
 
 # API helpers
@@ -248,125 +253,54 @@ with left:
         )
 
         st.session_state.last_citations = data.get("citations", [])
+        st.session_state.last_supporting_chunks = data.get("supporting_chunks", [])
+        st.session_state.last_extracted_entities = data.get("extracted_entities", {})
 st.divider()
 
-with st.expander("🔎 Debug retrieval", expanded=False):
-
+with st.expander(" Document Intelligence Evidence", expanded=True):
     st.caption(
-        "Inspect what the retriever is doing before the final answer is generated."
+        "This shows the structured metadata retrieved by the RAG system: entities, sections, pages, confidence scores, and supporting chunks."
     )
 
-    debug_query = st.text_input(
-        "Debug query",
-        placeholder="Enter a question to inspect retrieval...",
-        disabled=not is_ready(),
-    )
+    entities = st.session_state.last_extracted_entities
+    chunks = st.session_state.last_supporting_chunks
 
-    col_a, col_b, col_c = st.columns(3)
+    if not entities and not chunks:
+        st.info("Ask a question first. Retrieved entities and supporting evidence will appear here.")
+    else:
+        if entities:
+            st.subheader("Extracted entities used in the answer")
+            st.json(entities)
 
-    top_k_vec = col_a.slider("Vector top-k", 1, 20, 8, 1)
-    top_k_bm25 = col_b.slider("BM25 top-k", 1, 20, 8, 1)
-    top_k_hybrid = col_c.slider("Hybrid top-k", 1, 20, 8, 1)
-
-    use_rewrite = st.checkbox("Use query rewriting", value=True)
-
-    run_debug = st.button(
-        "Run retrieval debug",
-        disabled=not is_ready() or not debug_query.strip(),
-        use_container_width=True,
-    )
-
-    if run_debug:
-
-        with st.spinner("Running retrieval debug..."):
-
-            debug_data = retrieval_debug(
-                query=debug_query,
-                doc_id=st.session_state.doc_id,
-                alpha=alpha,
-                top_k_vec=top_k_vec,
-                top_k_bm25=top_k_bm25,
-                top_k_hybrid=top_k_hybrid,
-                use_rewrite=use_rewrite,
-            )
-
-        st.success("Retrieval debug completed ✅")
-
-        st.subheader("Rewritten query")
-
-        rewritten = debug_data.get("rewritten", {})
-
-        col1, col2 = st.columns(2)
-
-        with col1:
-            st.markdown("**Semantic query**")
-            st.code(rewritten.get("sem", ""), language="text")
-
-        with col2:
-            st.markdown("**Keyword query**")
-            st.code(rewritten.get("kw", ""), language="text")
-
-        def render_chunks(title, chunks):
-            st.subheader(title)
-
-            if not chunks:
-                st.info("No chunks returned.")
-                return
+        if chunks:
+            st.subheader("Supporting chunks")
 
             for i, chunk in enumerate(chunks, start=1):
-                score = chunk.get("score", chunk.get("hybrid_score", "N/A"))
+                score = chunk.get("confidence_score", chunk.get("hybrid_score", chunk.get("score", "N/A")))
                 page = chunk.get("page", "N/A")
+                section = chunk.get("section") or "Unknown section"
                 chunk_id = chunk.get("chunk_id", "N/A")
                 filename = chunk.get("filename", "Unknown file")
 
-                expander_title = (
-                    f"#{i} | score: {score} | page: {page} | chunk: {chunk_id}"
-                )
+                title = f"#{i} | page {page} | section: {section} | score: {score}"
 
-                with st.expander(expander_title, expanded=i <= 2):
+                with st.expander(title, expanded=i <= 2):
                     st.markdown(f"**File:** {filename}")
                     st.markdown(f"**Page:** {page}")
+                    st.markdown(f"**Section:** {section}")
                     st.markdown(f"**Chunk ID:** `{chunk_id}`")
 
-                    if "vector_score" in chunk or "bm25_score" in chunk:
-                        st.markdown(
-                            f"""
-                            **Vector score:** `{chunk.get("vector_score", "N/A")}`  
-                            **BM25 score:** `{chunk.get("bm25_score", "N/A")}`  
-                            **Hybrid score:** `{chunk.get("hybrid_score", "N/A")}`
-                            """
-                        )
+                    if chunk.get("entities"):
+                        st.markdown("**Entities in this chunk:**")
+                        st.json(chunk.get("entities"))
 
-                    text = (
-                        chunk.get("text")
-                        or chunk.get("snippet")
-                        or chunk.get("content")
-                        or ""
-                    )
+                    st.markdown("**Retrieved text:**")
+                    st.write(chunk.get("text", ""))
 
-                    st.write(text)
 
-        tab1, tab2, tab3 = st.tabs(
-            ["Vector results", "BM25 results", "Hybrid results"]
-        )
+                
 
-        with tab1:
-            render_chunks(
-                "Top vector chunks",
-                debug_data.get("vector_results", []),
-            )
 
-        with tab2:
-            render_chunks(
-                "Top BM25 chunks",
-                debug_data.get("bm25_results", []),
-            )
-
-        with tab3:
-            render_chunks(
-                "Top hybrid chunks",
-                debug_data.get("hybrid_results", []),
-            )
 
 
 # Citation column
@@ -390,5 +324,16 @@ with right:
             title = f"{c.get('filename')} — page {c.get('page')} — {c.get('chunk_id')}"
 
             with st.expander(title, expanded=False):
+                if c.get("section"):
+                    st.markdown(f"**Section:** {c.get('section')}")
+
+                if c.get("confidence_score") is not None:
+                    st.markdown(f"**Confidence score:** `{c.get('confidence_score')}`")
+
+                if c.get("entities"):
+                    st.markdown("**Extracted entities:**")
+                    st.json(c.get("entities"))
 
                 st.write(c.get("snippet", ""))
+
+                

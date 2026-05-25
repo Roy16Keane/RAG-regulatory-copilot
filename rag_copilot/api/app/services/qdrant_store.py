@@ -70,13 +70,16 @@ def index_doc_to_qdrant(doc_id: str, batch_size: int = 64) -> Dict:
             # We'll store chunk_id as payload for citations.
             point_id = abs(hash(c["chunk_id"])) % (2**63)
 
+            
             payload = {
                 "chunk_id": c["chunk_id"],
                 "doc_id": c["doc_id"],
                 "filename": c.get("filename"),
                 "page": c.get("page"),
+                "section": c.get("section"),
                 "chunk_index": c.get("chunk_index"),
-                "text": c["text"],  # store text for easy retrieval/snippets
+                "text": c["text"],
+                "entities": c.get("entities", {}),
                 **(c.get("metadata") or {})
             }
 
@@ -112,10 +115,13 @@ def vector_search(query: str, top_k: int = 8, doc_id: str | None = None) -> List
         payload = pnt.payload or {}
         results.append({
             "score": float(pnt.score),
+            "confidence_score": float(pnt.score),
             "chunk_id": payload.get("chunk_id"),
             "doc_id": payload.get("doc_id"),
             "filename": payload.get("filename"),
             "page": payload.get("page"),
+            "section": payload.get("section"),
+            "entities": payload.get("entities", {}),
             "chunk_index": payload.get("chunk_index"),
             "text": payload.get("text"),
         })
