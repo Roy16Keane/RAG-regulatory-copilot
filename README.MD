@@ -42,15 +42,15 @@ The upgraded interface exposes the retrieval process to users by displaying supp
 <p align="center">
   <img src="rag_copilot/docs/citationand answ.png" width="900">
 </p>
-
+Grounded answers and citations
 <p align="center">
   <img src="rag_copilot/docs/entities.png" width="900">
 </p>
-
+Retrived entities 
 <p align="center">
   <img src="rag_copilot/docs/retrievedchunk.png" width="900">
 </p>
-
+Evidence of chunks used with confidence
 
 ### infrastructure 
 
