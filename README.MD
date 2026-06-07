@@ -11,12 +11,6 @@ The application is containerised with Docker and deployed on AWS EKS using Kuber
   <img src="rag_copilot/docs/ui_demo1.png" width="800">
 </p>
 
-## Architecture
-
-<p align="center">
-  <img src="rag_copilot/docs/archi.png" width="800">
-</p>
-
 ## Document Intelligence Upgrade
 
 The system has been extended beyond traditional RAG into a document intelligence pipeline.
@@ -30,12 +24,6 @@ This enables:
 - Entity-aware search and reasoning
 - Improved grounding and citation transparency
 - Visibility into retrieved chunks and confidence
-
-## Document Intelligence Workflow
-
-<p align="center">
-  <img src="rag_copilot/docs/documentflow.png" width="900">
-</p>
 
 ## Explainable Evidence UI
 The upgraded interface exposes the retrieval process to users by displaying supporting citations, extracted entities, and retrieved chunks used during answer generation.
@@ -52,7 +40,7 @@ Retrived entities
 </p>
 Evidence of chunks used with confidence
 
-### infrastructure 
+## Infrastructure 
 
 ```
 AWS ECR
@@ -69,6 +57,125 @@ Kubernetes Services
  ├── ClusterIP services (internal communication)
  └── LoadBalancer service for UI
 ```
+### Architecture
+
+```mermaid
+flowchart TD
+
+    USER[User]
+
+    subgraph FRONTEND[Frontend Layer]
+        UI[Streamlit UI<br/>rag_ui]
+    end
+
+    subgraph API[Application Layer]
+        FASTAPI[FastAPI Backend<br/>rag_api]
+    end
+
+    subgraph RETRIEVAL[Hybrid Retrieval Layer]
+        QDRANT[Qdrant Vector Store<br/>Semantic Search]
+        OPENSEARCH[OpenSearch<br/>BM25 Keyword Search]
+        RAG[RAG Retrieval Pipeline]
+    end
+
+    subgraph LLM[Generation Layer]
+        OPENAI[OpenAI LLM]
+    end
+
+    subgraph OUTPUT[Response Layer]
+        RESPONSE[Grounded Response]
+    end
+
+    USER --> UI
+    UI --> FASTAPI
+
+    FASTAPI --> QDRANT
+    FASTAPI --> OPENSEARCH
+
+    QDRANT --> RAG
+    OPENSEARCH --> RAG
+
+    RAG --> OPENAI
+    OPENAI --> RESPONSE
+```
+
+
+### Document Intelligence workflow
+
+```mermaid
+flowchart TD
+
+    USER[User]
+
+    subgraph FRONTEND[Frontend Layer]
+        UI[Streamlit UI]
+    end
+
+    subgraph API[Application Layer]
+        FASTAPI[FastAPI Backend]
+    end
+
+    subgraph INGESTION[Document Processing Layer]
+        PDF[PDF Upload]
+        PARSE[Document Intelligence]
+        META[Metadata Extraction]
+        ENTITY[Entity Extraction]
+        CHUNK[Chunking]
+        EMBED[Embeddings]
+    end
+
+    subgraph STORAGE[Knowledge Layer]
+        QDRANT[Qdrant Vector Store]
+        OPENSEARCH[OpenSearch BM25 Index]
+    end
+
+    subgraph RETRIEVAL[Retrieval Layer]
+        HYBRID[Hybrid Retrieval]
+        RERANK[Reranking]
+    end
+
+    subgraph GENERATION[Generation Layer]
+        OPENAI[OpenAI GPT Model]
+    end
+
+    subgraph OUTPUT[Response Layer]
+        ANSWER[Grounded Answer]
+        CITE[Citations]
+        ENTITIES[Extracted Entities]
+    end
+
+    USER --> UI
+    UI --> FASTAPI
+
+    PDF --> PARSE
+    PARSE --> META
+    PARSE --> ENTITY
+
+    META --> CHUNK
+    ENTITY --> CHUNK
+
+    CHUNK --> EMBED
+
+    EMBED --> QDRANT
+    CHUNK --> OPENSEARCH
+
+    FASTAPI --> HYBRID
+
+    QDRANT --> HYBRID
+    OPENSEARCH --> HYBRID
+
+    HYBRID --> RERANK
+    RERANK --> OPENAI
+
+    OPENAI --> ANSWER
+    OPENAI --> CITE
+    OPENAI --> ENTITIES
+```
+
+
+
+
+
 
 ## Features
 
